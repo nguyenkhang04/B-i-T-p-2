@@ -1,26 +1,52 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import { notification } from 'antd';
 
-function App() {
+import { fetchReminders, saveReminder } from './reminderService';
+import { Reminder } from './type';
+import ReminderForm from './component/ReminderForm';
+import ReminderList from './component/RenminderList';
+
+const App: React.FC = () => {
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+
+  const handleAddReminder = async (newReminder: Reminder) => {
+    await saveReminder(newReminder); 
+    setReminders((prevReminders) => [...prevReminders, newReminder]); 
+  };
+
+  useEffect(() => {
+    const loadReminders = async () => {
+      const fetchedReminders = await fetchReminders(); 
+      setReminders(fetchedReminders);
+    };
+
+    loadReminders();
+  }, []);
+
+  useEffect(() => {
+    reminders.forEach((reminder) => {
+      if (reminder.isToday) {
+        notification.open({
+          message: 'Nhắc Nhở!',
+          description: reminder.content,
+        });
+      }
+    });
+  }, [reminders]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: 20, display: 'flex', gap: '20px' }}>
+      <div style={{ width: '300px' }}>
+        <h2>Thêm Nhắc Nhở</h2>
+        <ReminderForm onAddReminder={handleAddReminder} />
+      </div>
+
+      <div style={{ flex: 1 }}>
+        <h2>Danh Sách Nhắc Nhở</h2>
+        <ReminderList reminders={reminders} />
+      </div>
     </div>
   );
-}
+};
 
 export default App;

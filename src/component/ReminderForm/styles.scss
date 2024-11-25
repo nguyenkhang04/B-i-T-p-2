@@ -1,0 +1,17 @@
+.reminder-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .input {
+    width: 100%;
+  }
+
+  .date-picker {
+    flex: 1;
+  }
+
+  .save-button {
+    align-self: flex-start;
+  }
+}

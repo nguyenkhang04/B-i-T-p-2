@@ -1,0 +1,17 @@
+.reminder-item {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+
+  &.is-today {
+    background-color: #ffcccc;
+  }
+
+  .date {
+    font-weight: bold;
+  }
+
+  .content {
+    margin-top: 5px;
+  }
+}
