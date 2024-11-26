@@ -5,13 +5,18 @@ import "./styles.scss";
 
 interface Props {
   reminders: Reminder[];
+  onDeleteReminder: (index: number) => void;
 }
 
-const ReminderList: React.FC<Props> = ({ reminders }) => {
+const ReminderList: React.FC<Props> = ({ reminders, onDeleteReminder }) => {
   return (
     <div className="reminder-list">
       {reminders.map((reminder, index) => (
-        <ReminderItem key={index} reminder={reminder} />
+        <ReminderItem
+          key={index}
+          reminder={reminder}
+          onDelete={() => onDeleteReminder(index)}
+        />
       ))}
     </div>
   );

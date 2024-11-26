@@ -14,7 +14,7 @@ const ReminderForm: React.FC<Props> = ({ onAddReminder }) => {
 
   const today = dayjs().startOf("day");
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!content || !date) {
       message.error("Bạn chưa nhập Nội Dung và Ngày Nhắc!");
       return;
@@ -25,11 +25,26 @@ const ReminderForm: React.FC<Props> = ({ onAddReminder }) => {
       return;
     }
 
-    onAddReminder({
-      content,
-      date: date.format("DD/MM/YYYY"),
-      isToday: date.isSame(today, "day"),
+    const response = await fetch("http://localhost:8888/reminders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content,
+        date: date.format("DD/MM/YYYY"),
+        isToday: date.isSame(today, "day"),
+      }),
     });
+
+    if (!response.ok) {
+      message.error("Đã xảy ra lỗi khi lưu nhắc nhở!");
+      return;
+    }
+
+    const newReminder = await response.json();
+
+    onAddReminder(newReminder);
 
     setContent("");
     setDate(null);
