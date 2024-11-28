@@ -1,5 +1,5 @@
 export interface Reminder {
-  id: number;
+  id: string;
   content: string;
   date: string;
   isToday: boolean;

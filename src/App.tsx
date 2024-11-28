@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { notification } from "antd";
+import { v4 as uuidv4 } from "uuid";
 import { Reminder } from "./type";
 import ReminderList from "./component/RenminderList";
 import ReminderForm from "./component/ReminderForm";
+import dayjs from "dayjs";
 
 const fetchReminders = async (): Promise<Reminder[]> => {
-  const response = await fetch("http://localhost:8888/reminders");
+  const response = await fetch(
+    `http://localhost:8888/reminders?timestamp=${Date.now()}`
+  );
   const data = await response.json();
   return data;
 };
@@ -22,41 +26,91 @@ const saveReminder = async (newReminder: Reminder): Promise<Reminder> => {
   return savedReminder;
 };
 
-const deleteReminder = async (id: number): Promise<void> => {
+const deleteReminder = async (id: string): Promise<void> => {
   await fetch(`http://localhost:8888/reminders/${id}`, {
     method: "DELETE",
   });
 };
+
 
 const App: React.FC = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
 
   const loadReminders = async () => {
     const fetchedReminders = await fetchReminders();
-    setReminders(fetchedReminders);
+
+    if (!fetchedReminders || fetchedReminders.length === 0) {
+      setReminders([]);
+      return;
+    }
+
+    const sortedReminders = fetchedReminders.sort((a, b) =>
+      dayjs(a.date, "DD/MM/YYYY").isAfter(dayjs(b.date, "DD/MM/YYYY")) ? 1 : -1
+    );
+    setReminders(sortedReminders);
   };
 
   const handleAddReminder = async (newReminder: Reminder) => {
-    const savedReminder = await saveReminder(newReminder);
-    setReminders((prevReminders) => [...prevReminders, savedReminder]);
+    const isDuplicate = reminders.some(
+      (reminder) =>
+        reminder.content === newReminder.content &&
+        reminder.date === newReminder.date
+    );
+
+    if (isDuplicate) {
+      notification.warning({
+        message: "Nhắc Nhở Duplicated!",
+        description: "Reminder with this content and date already exists.",
+      });
+      return;
+    }
+
+    const reminderWithId = {
+      ...newReminder,
+      id: uuidv4(),
+    };
+
+    const savedReminder = await saveReminder(reminderWithId);
+
+    setReminders((prevReminders) => {
+      const sortedReminders = [...prevReminders, savedReminder].sort((a, b) =>
+        dayjs(a.date, "DD/MM/YYYY").isAfter(dayjs(b.date, "DD/MM/YYYY"))
+          ? 1
+          : -1
+      );
+      return sortedReminders;
+    });
   };
 
-  const handleDeleteReminder = async (index: number) => {
-    const reminderToDelete = reminders[index];
-    await deleteReminder(reminderToDelete.id);
-    loadReminders();
+  const handleDeleteReminder = async (id: string) => {
+    try {
+      await deleteReminder(id);
+  
+      setReminders((prevReminders) =>
+        prevReminders.filter((reminder) => reminder.id !== id) 
+      );
+    } catch (error) {
+      console.error("Failed to delete reminder:", error);
+    }
   };
+  
 
   useEffect(() => {
     loadReminders();
   }, []);
 
   useEffect(() => {
+    if (reminders.length === 0) return;
+
     reminders.forEach((reminder) => {
       if (reminder.isToday) {
         notification.open({
           message: "Nhắc Nhở!",
           description: reminder.content,
+          placement: "top",
+          style: {
+            textAlign: "center",
+          },
         });
       }
     });
