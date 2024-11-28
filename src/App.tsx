@@ -32,7 +32,6 @@ const deleteReminder = async (id: string): Promise<void> => {
   });
 };
 
-
 const App: React.FC = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
 
@@ -59,7 +58,7 @@ const App: React.FC = () => {
 
     if (isDuplicate) {
       notification.warning({
-        message: "Nhắc Nhở Duplicated!",
+        message: "Nhắc Nhở Trùng Lặp!",
         description: "Reminder with this content and date already exists.",
       });
       return;
@@ -70,30 +69,32 @@ const App: React.FC = () => {
       id: uuidv4(),
     };
 
-    const savedReminder = await saveReminder(reminderWithId);
+    try {
+      const savedReminder = await saveReminder(reminderWithId);
 
-    setReminders((prevReminders) => {
-      const sortedReminders = [...prevReminders, savedReminder].sort((a, b) =>
-        dayjs(a.date, "DD/MM/YYYY").isAfter(dayjs(b.date, "DD/MM/YYYY"))
-          ? 1
-          : -1
-      );
-      return sortedReminders;
-    });
+      setReminders((prevReminders) => {
+        const sortedReminders = [...prevReminders, savedReminder].sort((a, b) =>
+          dayjs(a.date, "DD/MM/YYYY").isAfter(dayjs(b.date, "DD/MM/YYYY"))
+            ? 1
+            : -1
+        );
+        return sortedReminders;
+      });
+    } catch (error) {
+      console.error("Lỗi khi lưu reminder:", error);
+    }
   };
 
   const handleDeleteReminder = async (id: string) => {
     try {
       await deleteReminder(id);
-  
       setReminders((prevReminders) =>
-        prevReminders.filter((reminder) => reminder.id !== id) 
+        prevReminders.filter((reminder) => reminder.id !== id)
       );
     } catch (error) {
-      console.error("Failed to delete reminder:", error);
+      console.error("Lỗi khi xóa reminder:", error);
     }
   };
-  
 
   useEffect(() => {
     loadReminders();
